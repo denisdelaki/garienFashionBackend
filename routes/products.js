@@ -18,13 +18,31 @@ router.post('/', async (req, res) => {
 
 // READ all products
 router.get('/', async (req, res) => {
-  const { data, error } = await supabase
-    .from('products')
-    .select('*');
-  if (error) {
-    return res.status(400).json({ error: error.message });
+  try {
+    console.log('Fetching products...');
+    
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Request timeout')), 10000)
+    );
+    
+    const supabasePromise = supabase
+      .from('products')
+      .select('*');
+    
+    const { data, error } = await Promise.race([supabasePromise, timeoutPromise]);
+    
+    if (error) {
+      console.error('Supabase error:', error);
+      return res.status(400).json({ error: error.message });
+    }
+    
+    console.log('Products fetched successfully:', data?.length || 0);
+    res.json(data);
+  } catch (error) {
+    console.error('Route error:', error);
+    res.status(500).json({ error: 'Internal server error', details: error.message });
   }
-  res.json(data);
 });
 
 // READ a product by ID
