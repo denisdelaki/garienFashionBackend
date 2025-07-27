@@ -5,7 +5,7 @@ var supabase = require('../supabase');
 // CREATE a product
 router.post('/', async (req, res) => {
   const now = new Date();
-  const productData = { ...req.body, createdAt: now, createdAt: now };
+  const productData = { ...req.body, createdAt: now, updatedAt: now };
   const { data, error } = await supabase
     .from('products')
     .insert([productData])
