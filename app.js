@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
@@ -6,6 +8,9 @@ var logger = require('morgan');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+var productsRouter = require('./routes/products');
+const cors = require('cors');
+
 
 var app = express();
 
@@ -19,8 +24,19 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+const corsOptions ={
+       origin: [
+        'http://localhost:4200',
+        'https://garien-fashion.vercel.app'
+    ],
+    credentials:true,           
+    optionSuccessStatus:200
+}
+app.use(cors(corsOptions));
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/products', productsRouter);
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
