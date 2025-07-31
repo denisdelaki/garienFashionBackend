@@ -62,8 +62,8 @@ router.get('/:id', async (req, res) => {
 // UPDATE a product
 router.put('/:id', async (req, res) => {
   const id = req.params.id;
-  const updateData = { ...req.body, updated_at: new Date() };
-  delete updateData.id; // Prevent updating id
+  const updateData = { ...req.body, updatedAt: new Date() };
+  delete updateData.id; 
   const { data, error } = await supabase
     .from('products')
     .update(updateData)

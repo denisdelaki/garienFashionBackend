@@ -56,7 +56,7 @@ module.exports = async (req, res) => {
 
     if (method === 'PUT') {
       if (!id) return res.status(400).json({ error: 'Missing product ID in query' });
-      const updateData = { ...req.body, updated_at: new Date() };
+      const updateData = { ...req.body, updatedAt: new Date() };
       delete updateData.id;
       const { data, error } = await supabase
         .from('products')
