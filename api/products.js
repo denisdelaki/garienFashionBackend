@@ -2,7 +2,7 @@ const supabase = require('../supabase');
 
 module.exports = async (req, res) => {
     // CORS Headers
-  res.setHeader('Access-Control-Allow-Origin', 'https://garien-fashion.vercel.app');
+  res.setHeader('Access-Control-Allow-Origin', 'https://garien-fashion.vercel.app, http://localhost:4200');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
