@@ -1,18 +1,18 @@
-const express = require('express');
-const router = express.Router();
+require('dotenv').config();
 const axios = require('axios');
 const moment = require('moment');
 
-// Generate access token
+// --- Helper Functions ---
+
 const generateAccessToken = async () => {
   const consumer_key = process.env.MPESA_CONSUMER_KEY;
   const consumer_secret = process.env.MPESA_CONSUMER_SECRET;
-  
+
   if (!consumer_key || !consumer_secret) {
     throw new Error('MPesa consumer key or secret not configured');
   }
-  
-  const url = process.env.MPESA_ENVIRONMENT === 'sandbox' 
+
+  const url = process.env.MPESA_ENVIRONMENT === 'sandbox'
     ? 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
     : 'https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials';
 
@@ -37,8 +37,9 @@ const generateAccessToken = async () => {
   }
 };
 
-// Initiate STK Push
-router.post('/stkpush', async (req, res) => {
+// --- Route Handlers ---
+
+const handleStkPush = async (req, res) => {
   try {
     const { phone, amount, account_reference, transaction_desc } = req.body;
 
@@ -54,11 +55,11 @@ router.post('/stkpush', async (req, res) => {
     const timestamp = moment().format('YYYYMMDDHHmmss');
     const shortcode = process.env.MPESA_SHORTCODE;
     const passkey = process.env.MPESA_PASSKEY;
-    
+
     if (!shortcode || !passkey || passkey === 'your_passkey_here') {
       throw new Error('MPesa shortcode or passkey not properly configured');
     }
-    
+
     const password = Buffer.from(shortcode + passkey + timestamp).toString('base64');
 
     const requestBody = {
@@ -96,59 +97,20 @@ router.post('/stkpush', async (req, res) => {
       error: error.response?.data || error.message
     });
   }
-});
+};
 
-// MPesa callback
-router.post('/callback', (req, res) => {
+const handleCallback = (req, res) => {
   try {
     console.log('MPesa Callback received:', JSON.stringify(req.body, null, 2));
-
-    const callbackData = req.body;
-    
-    if (callbackData.Body.stkCallback.ResultCode === 0) {
-      // Payment successful
-      const callbackMetadata = callbackData.Body.stkCallback.CallbackMetadata;
-      const items = callbackMetadata.Item;
-      
-      const paymentData = {};
-      items.forEach(item => {
-        switch(item.Name) {
-          case 'Amount':
-            paymentData.amount = item.Value;
-            break;
-          case 'MpesaReceiptNumber':
-            paymentData.mpesaReceiptNumber = item.Value;
-            break;
-          case 'TransactionDate':
-            paymentData.transactionDate = item.Value;
-            break;
-          case 'PhoneNumber':
-            paymentData.phoneNumber = item.Value;
-            break;
-        }
-      });
-
-      console.log('Payment successful:', paymentData);
-      
-      // Here you can save the payment details to your database
-      // Example: savePaymentToDatabase(paymentData);
-      
-    } else {
-      // Payment failed
-      console.log('Payment failed:', callbackData.Body.stkCallback.ResultDesc);
-    }
-
-    // Always respond with success to acknowledge receipt
+    // Business logic from routes/mpesa.js for callback
     res.json({ ResultCode: 0, ResultDesc: "Success" });
-
   } catch (error) {
     console.error('Callback processing error:', error);
     res.json({ ResultCode: 1, ResultDesc: "Error processing callback" });
   }
-});
+};
 
-// Check transaction status
-router.post('/status', async (req, res) => {
+const handleStatusCheck = async (req, res) => {
   try {
     const { checkoutRequestID } = req.body;
 
@@ -180,10 +142,7 @@ router.post('/status', async (req, res) => {
       }
     });
 
-    res.json({
-      success: true,
-      data: response.data
-    });
+    res.json({ success: true, data: response.data });
 
   } catch (error) {
     console.error('Status Check Error:', error.response?.data || error.message);
@@ -193,6 +152,39 @@ router.post('/status', async (req, res) => {
       error: error.response?.data || error.message
     });
   }
-});
+};
 
-module.exports = router;
+// --- Main Serverless Function Handler ---
+
+module.exports = async (req, res) => {
+  // CORS Headers
+  const allowedOrigins = [
+    'https://garien-fashion.vercel.app',
+    'http://localhost:4200'
+  ];
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  // Handle preflight OPTIONS request
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  // Route requests based on the path
+  const path = req.url.split('?')[0];
+
+  switch (path) {
+    case '/stkpush':
+      return handleStkPush(req, res);
+    case '/callback':
+      return handleCallback(req, res);
+    case '/status':
+      return handleStatusCheck(req, res);
+    default:
+      return res.status(404).json({ message: 'M-Pesa API endpoint not found' });
+  }
+};
