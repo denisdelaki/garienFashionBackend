@@ -9,6 +9,7 @@ var logger = require('morgan');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var productsRouter = require('./routes/products');
+var mpesaRouter = require('./routes/mpesa');
 const cors = require('cors');
 
 
@@ -24,18 +25,29 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const corsOptions ={
-       origin: [
+const corsOptions = {
+    origin: [
         'http://localhost:4200',
         'https://garien-fashion.vercel.app'
     ],
-    credentials:true,           
-    optionSuccessStatus:200
+    credentials: true,
+    optionsSuccessStatus: 200,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    preflightContinue: false
 }
 app.use(cors(corsOptions));
+
+// Debug middleware (remove in production)
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path} - Origin: ${req.get('origin')}`);
+  next();
+});
+
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/products', productsRouter);
+app.use('/mpesa', mpesaRouter);
 
 
 // catch 404 and forward to error handler
