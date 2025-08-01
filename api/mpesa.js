@@ -102,7 +102,34 @@ const handleStkPush = async (req, res) => {
 const handleCallback = (req, res) => {
   try {
     console.log('MPesa Callback received:', JSON.stringify(req.body, null, 2));
-    // Business logic from routes/mpesa.js for callback
+
+    const callbackData = req.body;
+
+    // Check if the main body and stkCallback exist to prevent errors
+    if (callbackData.Body && callbackData.Body.stkCallback) {
+      if (callbackData.Body.stkCallback.ResultCode === 0) {
+        // Payment successful
+        const callbackMetadata = callbackData.Body.stkCallback.CallbackMetadata;
+        const items = callbackMetadata.Item;
+        
+        const paymentData = {};
+        items.forEach(item => {
+          // A more robust way to capture all returned data
+          if (item.Name && typeof item.Value !== 'undefined') {
+            paymentData[item.Name] = item.Value;
+          }
+        });
+
+        console.log('Payment successful:', paymentData);
+        // Here you would typically save paymentData to your database
+        
+      } else {
+        // Payment failed or was cancelled by the user
+        console.log('Payment failed/cancelled:', callbackData.Body.stkCallback.ResultDesc);
+      }
+    }
+
+    // Acknowledge receipt to Safaricom's API to prevent retries
     res.json({ ResultCode: 0, ResultDesc: "Success" });
   } catch (error) {
     console.error('Callback processing error:', error);
@@ -174,23 +201,24 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
-  // Route requests based on the path
-  let path = req.url.split('?')[0];
+  // More robust routing that handles potential path variations like trailing slashes.
+  const path = req.url.split('?')[0];
 
-  // Normalize path: remove trailing slash if it exists and isn't the root path.
-  // This handles cases like '/stkpush/' vs '/stkpush'.
-  if (path.length > 1 && path.endsWith('/')) {
-    path = path.slice(0, -1);
+  if (path.startsWith('/stkpush')) {
+    return handleStkPush(req, res);
   }
 
-  switch (path) {
-    case '/stkpush':
-      return handleStkPush(req, res);
-    case '/callback':
-      return handleCallback(req, res);
-    case '/status':
-      return handleStatusCheck(req, res);
-    default:
-      return res.status(404).json({ message: 'M-Pesa API endpoint not found' });
+  if (path.startsWith('/callback')) {
+    return handleCallback(req, res);
   }
+
+  if (path.startsWith('/status')) {
+    return handleStatusCheck(req, res);
+  }
+
+  // If no route matches, return a 404 with debugging info.
+  return res.status(404).json({
+    message: 'M-Pesa API endpoint not found',
+    debug: { receivedPath: path }
+  });
 };
