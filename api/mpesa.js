@@ -175,7 +175,13 @@ module.exports = async (req, res) => {
   }
 
   // Route requests based on the path
-  const path = req.url.split('?')[0];
+  let path = req.url.split('?')[0];
+
+  // Normalize path: remove trailing slash if it exists and isn't the root path.
+  // This handles cases like '/stkpush/' vs '/stkpush'.
+  if (path.length > 1 && path.endsWith('/')) {
+    path = path.slice(0, -1);
+  }
 
   switch (path) {
     case '/stkpush':
