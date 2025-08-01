@@ -204,15 +204,15 @@ module.exports = async (req, res) => {
   // More robust routing that handles potential path variations like trailing slashes.
   const path = req.url.split('?')[0];
 
-  if (path.startsWith('/stkpush')) {
+  if (path.startsWith('/mpesa/stkpush')) {
     return handleStkPush(req, res);
   }
 
-  if (path.startsWith('/callback')) {
+  if (path.startsWith('/mpesa/callback')) {
     return handleCallback(req, res);
   }
 
-  if (path.startsWith('/status')) {
+  if (path.startsWith('/mpesa/status')) {
     return handleStatusCheck(req, res);
   }
 
