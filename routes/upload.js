@@ -1,13 +1,12 @@
-
 const express = require('express');
 const { generateUploadUrl } = require('@vercel/blob');
 const router = express.Router();
 
-router.post('/upload-url', async (req, res) => {
+router.post('/upload', async (req, res) => {
   try {
     const { url } = await generateUploadUrl({
       allowedContentTypes: ['image/jpeg', 'image/png', 'image/webp'],
-      access: 'public', 
+      access: 'public',
     });
 
     res.json({ uploadUrl: url });
