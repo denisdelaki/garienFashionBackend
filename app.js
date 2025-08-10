@@ -10,6 +10,7 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var productsRouter = require('./routes/products');
 var mpesaRouter = require('./routes/mpesa');
+const uploadRoutes = require('./routes/upload');
 const cors = require('cors');
 
 
@@ -48,6 +49,8 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/products', productsRouter);
 app.use('/mpesa', mpesaRouter);
+app.use('/api', uploadRoutes);
+
 
 
 // catch 404 and forward to error handler
