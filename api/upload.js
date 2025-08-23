@@ -24,8 +24,8 @@ app.use(cors({
 
 app.use(express.json());
 
-// Mount upload route
-app.use('/api', uploadRoutes);
+// Mount upload route at root since Vercel routes /upload to this file
+app.use('/', uploadRoutes);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {

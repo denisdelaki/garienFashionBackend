@@ -4,6 +4,7 @@
   "routes": [
     { "src": "/products(/.*)?", "dest": "api/products.js" },
     { "src": "/mpesa(/.*)?", "dest": "api/mpesa.js" },
+    { "src": "/upload(/.*)?", "dest": "api/upload.js" },
     { "src": "/(.*)", "dest": "api/index.js" }
   ]
 }
