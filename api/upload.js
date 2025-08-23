@@ -1,25 +1,36 @@
-require('dotenv').config();
+const { generateUploadUrl } = require('@vercel/blob');
 
-const express = require('express');
-const serverless = require('serverless-http');
-const cors = require('cors');
-const uploadRoutes = require('./routes/upload');
+module.exports = async (req, res) => {
+  const allowedOrigins = [
+    'https://garien-fashion.vercel.app',
+    'http://localhost:4200'
+  ];
 
-const app = express();
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-const corsOptions = {
-  origin: [
-    'http://localhost:4200',
-    'https://garien-fashion.vercel.app'
-  ],
-  credentials: true,
-  optionSuccessStatus: 200
-};
-app.use(cors(corsOptions));
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
-app.use(express.json());
-
-// Mount upload route at root since Vercel routes /upload to this file
-app.use('/', uploadRoutes);
-
-module.exports = serverless(app);
+  // Handle POST request to generate upload URL
+  if (req.method === 'POST') {
+    try {
+      const { url } = await generateUploadUrl({
+        allowedContentTypes: ['image/jpeg', 'image/png', 'image/webp'],
+        access: 'public',
+      });
+      res.status(200).json({ uploadUrl: url });
+    } catch (error) {
+      console.error('Error generating upload URL:', error);
+      res.status(500).json({ error: 'Failed to generate upload URL' });
+    }
+  } else {
+    res.status(405).json({ error: 'Method not allowed' });
+  }
+}
