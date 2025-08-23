@@ -11,6 +11,7 @@ const cors = require('cors');
 const indexRouter = require('../routes/index');
 const usersRouter = require('../routes/users');
 const productsRouter = require('../routes/products');
+const uploadRoutes = require('../routes/upload');
 const mpesaRouter = require('../routes/mpesa');
 
 const app = express();
@@ -37,6 +38,7 @@ app.use(cors(corsOptions));
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/products', productsRouter);
+app.use('/upload', uploadRoutes);
 app.use('/mpesa', mpesaRouter);
 
 // catch 404 and forward to error handler
