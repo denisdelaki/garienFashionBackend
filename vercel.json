@@ -8,7 +8,6 @@
       "routes": [
         {
           "src": "/upload",
-          "methods": ["POST", "OPTIONS"],
           "dest": "/api/upload.js"
         }
       ]
